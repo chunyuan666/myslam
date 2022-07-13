@@ -8,8 +8,15 @@ namespace myslam{
 
     void Backend::Running(){
         while(1){
-            
+            if(CheckNewKeyFrame()){
+                ProcessKeyFrame();
+            }
         }
+    }
+
+    void Backend::ProcessKeyFrame(){
+        mCurrentKeyFrame = mlpNewkeyFrames.front();
+        mlpNewkeyFrames.pop_front();
     }
         
 

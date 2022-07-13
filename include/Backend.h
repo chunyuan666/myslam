@@ -10,7 +10,7 @@ class Backend{
 public:
     Backend();
 
-    static void Running();
+    void Running();
 
     void InserKeyFrame(const KeyFrame::Ptr &kf){
         mlpNewkeyFrames.push_back(kf);
@@ -23,6 +23,8 @@ public:
         }
         return false;
     }
+
+    void ProcessKeyFrame();
     
 
 public:
@@ -31,6 +33,7 @@ public:
 private:
     std::list<KeyFrame::Ptr> mlpNewkeyFrames;
     bool mbNeedOptimize = false;
+    KeyFrame::Ptr mCurrentKeyFrame;
 
 
 };
