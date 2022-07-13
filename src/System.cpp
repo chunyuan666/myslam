@@ -33,6 +33,9 @@ System::System(const std::string& config_file){
 
     mFrontend->mMap = std::make_shared<Map>();
 
+    mBackend = std::make_shared<Backend>();
+    
+
 }
 
 bool System::Run(const cv::Mat &ImgLeft, const cv::Mat &ImgRight, const double &TimeStamp){

@@ -22,10 +22,11 @@ namespace myslam{
         std::vector<EdgeProjectionPoseOnly *> edges;
         std::vector<Feature::Ptr> features;
         edges.reserve(Frame->mvpFeatureLeft.size());
-        edges.reserve(Frame->mvpFeatureLeft.size());
+        features.reserve(Frame->mvpFeatureLeft.size());
         for(auto &fea : Frame->mvpFeatureLeft){
             auto map = fea->mpMapPoint.lock();
             if(map && !map->mbIsOutlier){
+                LOG(INFO) << "begin";
                 auto *edge = new EdgeProjectionPoseOnly(map->GetPose(), Frame->mK);
                 edge->setId(index);
                 edge->setVertex(0, vertex);

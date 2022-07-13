@@ -72,7 +72,9 @@ add_library(${PROJECT_NAME} STATIC
         src/ORBExtractor.cpp
         src/MapPoints.cpp
         src/Map.cpp
-        src/KeyFrame.cpp src/Optimizer.cpp include/Optimizer.h)
+        src/KeyFrame.cpp
+        src/Optimizer.cpp include/Optimizer.h
+        src/Backend.cpp)
 
 enable_testing()
 

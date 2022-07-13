@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 #include <list>
+#include <thread>
 
 // glog
 #include <gflags/gflags.h>
