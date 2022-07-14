@@ -4,12 +4,13 @@
 #include "Common.h"
 #include "KeyFrame.h"
 
+
 namespace myslam{
+ 
 
 class Backend{
 public:
     Backend();
-
     void Running();
 
     void InserKeyFrame(const KeyFrame::Ptr &kf){
@@ -25,6 +26,12 @@ public:
     }
 
     void ProcessKeyFrame();
+
+    void SetMap(const Map::Ptr &map){
+        mMap = map;
+    }
+
+    
     
 
 public:
@@ -34,7 +41,9 @@ private:
     std::list<KeyFrame::Ptr> mlpNewkeyFrames;
     bool mbNeedOptimize = false;
     KeyFrame::Ptr mCurrentKeyFrame;
-
+    KeyFrame::Ptr mLastKeyFrame;
+    Map::Ptr mMap;
+    
 
 };
 

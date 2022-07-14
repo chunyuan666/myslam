@@ -1,4 +1,6 @@
 #include "Backend.h"
+#include "KeyFrame.h"
+#include "Map.h"
 
 namespace myslam{
 
@@ -11,12 +13,15 @@ namespace myslam{
             if(CheckNewKeyFrame()){
                 ProcessKeyFrame();
             }
+
         }
     }
 
     void Backend::ProcessKeyFrame(){
         mCurrentKeyFrame = mlpNewkeyFrames.front();
         mlpNewkeyFrames.pop_front();
+        mMap->InserKeyFrame(mCurrentKeyFrame);
+        
     }
         
 

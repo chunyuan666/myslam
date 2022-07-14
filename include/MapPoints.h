@@ -6,7 +6,7 @@
 #define MYSLAM_MAPPOINTS_H
 
 #include "Common.h"
-//#include "Frame.h"
+#include "Feature.h"
 
 
 namespace myslam{
@@ -42,6 +42,9 @@ namespace myslam{
         bool mbIsOutlier = false;
     private:
         Vector3d mCoordinate = Vector3d::Zero();
+        std::map<unsigned long, Feature::Ptr> mObservation;
+
+        int mObservedCnt = 0;
     };
 }
 

@@ -1,7 +1,7 @@
 #include "KeyFrame.h"
 
 namespace myslam{
-    unsigned long KeyFrame::nNextId = 0;
+    unsigned long KeyFrame::nLastId = 0;
 
     KeyFrame::KeyFrame(const Frame::Ptr &frame){
         mFrameId = frame->mFrameId;
@@ -12,7 +12,7 @@ namespace myslam{
         mvpFeatureRight = frame->mvpFeatureRight;
         mPose = frame->mPose;
 
-        mKeyFrameId = nNextId++;
+        mKeyFrameId = nLastId++;
 
     }
 

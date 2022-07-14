@@ -28,6 +28,13 @@ public:
         mlOutlierMapPoints.push_back(map_id);
     }
 
+    void SetNumActivateMap(const int &num){
+        mNumActivateMap = num;
+    }
+
+    void CullActivateKF();
+
+
 public:
     typedef std::shared_ptr<Map> Ptr;
 
@@ -36,8 +43,16 @@ private:
     std::map<unsigned long, MapPoints::Ptr> mmAllMapPoints;
     // 所有关键帧,first:关键帧的ID secend:关键帧
     std::map<unsigned long, KeyFrame::Ptr> mmAllKeyFrames;
+    // 滑动窗口关键帧
+    std::map<unsigned long, KeyFrame::Ptr> mmActivateKeyFrames;
+    // 滑动窗口地图点
+    std::list<unsigned long> mlActivateMapPoints;
     // 地图中的外点　由估计位姿时产生
     std::list<unsigned long> mlOutlierMapPoints;
+
+    int mNumActivateMap;
+
+
 };
 
 

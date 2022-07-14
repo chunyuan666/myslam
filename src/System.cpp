@@ -31,9 +31,17 @@ System::System(const std::string& config_file){
     fs_read["numFeatures.trackingGood"] >> TrackingGood;
     mFrontend->SetTrackingPara(InitGood, TrackingGood, TrackingBad);
 
-    mFrontend->mMap = std::make_shared<Map>();
+    mMap = std::make_shared<Map>();
+    int num_activateMap;
+    fs_read["Map.activeMap.size"] >> num_activateMap;
+    mMap->SetNumActivateMap(num_activateMap);
+    
+    mFrontend->SetMap(mMap);
 
     mBackend = std::make_shared<Backend>();
+    mBackend->SetMap(mMap);
+
+    
     
 
 }

@@ -276,9 +276,7 @@ namespace myslam {
     //　插入关键帧
     bool Frontend::InserKeyFrame(){
         KeyFrame::Ptr newKeyFrame = std::make_shared<KeyFrame>(mCurrentFrame);
-        mMap->InserKeyFrame(newKeyFrame);
-        // 插入后端
-        mBackend->InserKeyFrame(newKeyFrame);
+        mBackend->InserKeyFrame(newKeyFrame);// 插入后端
         return true;
     }
 }

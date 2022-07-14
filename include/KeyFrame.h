@@ -12,7 +12,7 @@ public:
 
 public:
     unsigned long mKeyFrameId;
-    static unsigned long nNextId;
+    static unsigned long nLastId;
     typedef std::shared_ptr<KeyFrame> Ptr;
 };
 

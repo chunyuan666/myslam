@@ -82,6 +82,13 @@ public:
     }
 
     /**
+     * @beirf 设置地图
+    */
+    void SetMap(const Map::Ptr &map){
+        mMap = map;
+    }
+
+    /**
      * ＠brief 初始化地图
      * */
      unsigned long  MapInit();
