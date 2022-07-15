@@ -166,6 +166,9 @@ namespace myslam {
         for(unsigned long i = 0; i < mCurrentFrame->mvpFeatureLeft.size(); i++){
             if(!mCurrentFrame->mvpFeatureRight[i])
                 continue;
+            auto map = mCurrentFrame->mvpFeatureLeft[i]->mpMapPoint;
+            if(!map.expired())  // 该特征点已有地图点，不再添加
+                continue;
             Kp1 = mCurrentFrame->mvpFeatureLeft[i]->mKeyPoint;
             Kp2 = mCurrentFrame->mvpFeatureRight[i]->mKeyPoint;
             SE3 p1 = mCameraLeft->GetCameraPose();
@@ -180,6 +183,7 @@ namespace myslam {
             MapPoints::Ptr NewPoint =  std::make_shared<MapPoints>(X3D);
             mCurrentFrame->mvpFeatureLeft[i]->mpMapPoint = NewPoint;
             mCurrentFrame->mvpFeatureRight[i]->mpMapPoint = NewPoint;
+            NewPoint->AddObservation(mCurrentFrame->mFrameId, mCurrentFrame->mvpFeatureLeft[i]);
             mMap->InserMapPoint(NewPoint);
         }
         return nGoodPoints;

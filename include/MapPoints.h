@@ -10,6 +10,7 @@
 
 
 namespace myslam{
+    class Feature;
     class MapPoints {
     public:
 
@@ -30,8 +31,33 @@ namespace myslam{
             return mCoordinate;
         }
 
+        std::map<unsigned long, std::weak_ptr<Feature> > GetActivateObservation(){
+            return mActiveObservation;
+        }
+
+        void AddObservation(unsigned long id, const std::weak_ptr<Feature>& feat){
+            mObservation.insert({id, feat});
+            mObservedCnt++;
+        }
         
-        
+        void AddActivateObservation(unsigned long id, const std::shared_ptr<Feature>& feat){
+            mActiveObservation.insert({id, feat});
+            mActiveObesedrCnt++;
+        }
+
+        void RemoveActiveObservation(unsigned long id,const std::shared_ptr<Feature>& feat){
+            for(auto iter = mActiveObservation.begin();iter!=mActiveObservation.end();iter++){
+                if(iter->second.lock() == feat){
+                    mActiveObservation.erase(iter);
+                    mActiveObesedrCnt--;
+                    break;
+                }
+            }
+        }
+        unsigned long GetActivateObsCnt(){
+            return mActiveObesedrCnt;
+        }
+
 
     public:
         typedef std::shared_ptr<MapPoints> Ptr;
@@ -42,9 +68,12 @@ namespace myslam{
         bool mbIsOutlier = false;
     private:
         Vector3d mCoordinate = Vector3d::Zero();
-        std::map<unsigned long, Feature::Ptr> mObservation;
+        // 第一个为关键帧ID, 第二个为特征点
+        std::map<unsigned long, std::weak_ptr<Feature> > mObservation;
+        std::map<unsigned long, std::weak_ptr<Feature> > mActiveObservation;
 
-        int mObservedCnt = 0;
+        unsigned long mObservedCnt = 0;
+        unsigned long mActiveObesedrCnt = 0; 
     };
 }
 

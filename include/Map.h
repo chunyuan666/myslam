@@ -32,7 +32,13 @@ public:
         mNumActivateMap = num;
     }
 
-    void CullActivateKF();
+    void CullOldActivateKF();
+
+    void CullOldActivateMapPoint();
+
+    void InserActivateMapPoints(const MapPoints::Ptr &MapPoint);
+
+    void RemoveActivateMapPoints();
 
 
 public:
@@ -46,13 +52,13 @@ private:
     // 滑动窗口关键帧
     std::map<unsigned long, KeyFrame::Ptr> mmActivateKeyFrames;
     // 滑动窗口地图点
-    std::list<unsigned long> mlActivateMapPoints;
+    std::map<unsigned long, MapPoints::Ptr> mmActivateMapPoints;
     // 地图中的外点　由估计位姿时产生
     std::list<unsigned long> mlOutlierMapPoints;
 
     int mNumActivateMap;
 
-
+    KeyFrame::Ptr mpCurrentKeyFrame;
 };
 
 

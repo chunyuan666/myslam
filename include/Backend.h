@@ -3,6 +3,7 @@
 
 #include "Common.h"
 #include "KeyFrame.h"
+#include "Map.h"
 
 
 namespace myslam{
