@@ -6,6 +6,7 @@
 
 namespace myslam
 {
+    class MapPoints;
 class Feature{
 public:
     Feature()= default;

@@ -4,6 +4,7 @@
 #include "Common.h"
 #include "KeyFrame.h"
 #include "Map.h"
+#include "Optimizer.h"
 
 
 namespace myslam{

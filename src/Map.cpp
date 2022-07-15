@@ -77,7 +77,7 @@ namespace myslam{
         for(auto &feat : mmActivateKeyFrames[toDelId]->mvpFeatureLeft){
             auto map = feat->mpMapPoint.lock();
             if(map){
-                map.RemoveActiveObservation(toDelId, feat);
+                map->RemoveActiveObservation(toDelId, feat);
             }
         }
         // 删除关键帧

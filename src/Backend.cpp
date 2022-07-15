@@ -5,15 +5,17 @@
 namespace myslam{
 
     Backend::Backend(){
+        mbNeedOptimize = false;
         std::thread([this] { Running(); });
     }
 
     void Backend::Running(){
-        while(1){
-            if(CheckNewKeyFrame()){
+        while(mbNeedOptimize){
+            while(CheckNewKeyFrame()){
                 ProcessKeyFrame();
             }
-
+            //　局部优化位姿和地图
+            Optimizer::OptimizeActivateMap();
         }
     }
 
@@ -21,8 +23,5 @@ namespace myslam{
         mCurrentKeyFrame = mlpNewkeyFrames.front();
         mlpNewkeyFrames.pop_front();
         mMap->InserKeyFrame(mCurrentKeyFrame);
-        
     }
-        
-
 }
