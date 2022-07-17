@@ -32,6 +32,7 @@ namespace myslam{
     typedef Eigen::Matrix<double, 3, 1> Vec3d;
     typedef Eigen::Matrix<double, 6, 1> Vec6d;
     typedef Eigen::Matrix<double, 3, 3> Mat33d;
+    typedef Eigen::Matrix<double, 2, 2> Mat22d;
 
 #define SE3_Identity SE3(SO3(), Vector3d::Zero())
 

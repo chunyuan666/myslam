@@ -45,7 +45,7 @@ namespace myslam{
             mActiveObesedrCnt++;
         }
 
-        void RemoveActiveObservation(unsigned long id,const std::shared_ptr<Feature>& feat){
+        void RemoveActiveObservation(const std::shared_ptr<Feature>& feat){
             for(auto iter = mActiveObservation.begin();iter!=mActiveObservation.end();iter++){
                 if(iter->second.lock() == feat){
                     mActiveObservation.erase(iter);
@@ -54,8 +54,23 @@ namespace myslam{
                 }
             }
         }
+
+        void RemoveObservation(std::shared_ptr<Feature> &feature){
+            for(auto iter = mObservation.begin(); iter != mObservation.end(); iter++){
+                if(iter->second.lock() == feature){
+                    mObservation.erase(iter);
+                    mObservedCnt--;
+                    break;
+                }
+            }
+        }
+
         unsigned long GetActivateObsCnt(){
             return mActiveObesedrCnt;
+        }
+
+        unsigned long GetObsCnt(){
+            return mObservedCnt;
         }
 
 

@@ -73,13 +73,113 @@ namespace myslam{
         return edges.size()-nOutLiers;
     }
 
-    unsigned long Optimizer::OptimizeActivateMap() {
+    unsigned long Optimizer::OptimizeActivateMap(const Map::Ptr &Map, const Camera::Ptr &camera) {
         typedef g2o::BlockSolver_6_3 BlockSolverType;
         typedef g2o::LinearSolverCSparse<BlockSolverType::PoseMatrixType> LinearSolverType;
         auto solver = new g2o::OptimizationAlgorithmLevenberg(g2o::make_unique<BlockSolverType>(
-                g2o::make_unique<LinearSolverType>()));
+        g2o::make_unique<LinearSolverType>()));
         g2o::SparseOptimizer optimizer;
         optimizer.setAlgorithm(solver);
 
+        auto KFs = Map->GetActivateKeyFrames();
+        auto MPs = Map->GetActivateMapPoints();
+
+        std::map<unsigned long, VertexPose *> Vertex_KFs;
+        std::map<unsigned long, VertexXYZ *> Vertex_Mps;
+
+        // 增加顶点，相机位姿
+        int maxKFid = 0;
+        for(auto &Keyframe : KFs){
+            auto kf = Keyframe.second;
+            auto vertex_pose = new VertexPose();
+            vertex_pose->setId(static_cast<int>(kf->mKeyFrameId));
+            vertex_pose->setEstimate(kf->GetPose());
+            optimizer.addVertex(vertex_pose);
+            if(kf->mKeyFrameId > maxKFid){
+                maxKFid = static_cast<int>(kf->mKeyFrameId);
+            }
+            Vertex_KFs.insert(std::make_pair(kf->mKeyFrameId, vertex_pose));
+        }
+
+        int index = 1;
+        double chi2_th = 5.991;
+        std::map<Feature::Ptr, EdgeProjection *> FeatsAndEdges;
+        // 增加顶点，地图点的坐标
+        for(auto &MapPoint : MPs){
+            auto mp = MapPoint.second;
+            if(!mp)
+                continue;
+            auto vertex_XYZ = new VertexXYZ();
+            vertex_XYZ->setId(static_cast<int>(maxKFid +1 + mp->mid));
+            vertex_XYZ->setEstimate(mp->GetPose());
+            Vertex_Mps.insert(std::make_pair(mp->mid, vertex_XYZ));
+
+            for(auto &obs : mp->GetActivateObservation()){
+                auto kfId = obs.first;
+                auto feat = obs.second.lock();
+                auto *e = new EdgeProjection(camera->GetK(), camera->GetCameraPose());
+                e->setId(index);
+                e->setVertex(0, Vertex_KFs[kfId]);
+                e->setVertex(1, Vertex_Mps[kfId]);
+                e->setMeasurement(cvPoint2Vec2(feat->mKeyPoint.pt));
+                e->setInformation(Mat22d::Identity());
+                auto rk = new g2o::RobustKernelHuber();
+                rk->setDelta(chi2_th);
+                e->setRobustKernel(rk);
+                optimizer.addEdge(e);
+                index++;
+                FeatsAndEdges.insert(std::make_pair(feat, e));
+            }
+        }
+        int cntOutlier = 0;
+        int iteration = 4;
+        for(int i = 0; i < iteration; i++){
+            optimizer.initializeOptimization(0);
+            optimizer.optimize(10);
+            for(auto &fe : FeatsAndEdges){
+                auto feat = fe.first;
+                auto e = fe.second;
+                if(feat->IsOutLier){
+                    e->computeError();
+                }
+                if(e->chi2() > chi2_th){
+                    cntOutlier ++;
+                    e->setLevel(1);
+                    feat->IsOutLier = true;
+                }else{
+                    e->setLevel(0);
+                    feat->IsOutLier = false;
+                }
+                if(i>=iteration/2)
+                    e->setRobustKernel(nullptr);
+            }
+        }
+        // 处理外点
+        // 遍历当前边和特征点
+        for(auto &fe : FeatsAndEdges){
+            // 找出外点的特征
+            auto feat = fe.first;
+            auto mp = feat->mpMapPoint.lock();
+            if(feat->IsOutLier){
+                // 取消Feature对该点的观测
+                mp->RemoveActiveObservation(feat);
+                mp->RemoveObservation(feat);
+            }
+            if(mp->GetObsCnt()<=0){ //该点已经没有观测
+                mp->mbIsOutlier = true; //标记为外点
+                Map->InserOutLier(mp->mid); //插入地图的外点，稍后消除
+            }
+            // 释放该地图点的指针,feat不再持有该地图点的指针
+            feat->mpMapPoint.reset();
+        }
+        //设置
     }
 }
+
+
+
+
+
+
+
+

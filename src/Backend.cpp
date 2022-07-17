@@ -15,7 +15,7 @@ namespace myslam{
                 ProcessKeyFrame();
             }
             //　局部优化位姿和地图
-            Optimizer::OptimizeActivateMap();
+            // Optimizer::OptimizeActivateMap(mMap);
         }
     }
 

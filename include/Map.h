@@ -32,6 +32,18 @@ public:
         mNumActivateMap = num;
     }
 
+    std::map<unsigned long, KeyFrame::Ptr> GetActivateKeyFrames(){
+        return mmActivateKeyFrames;
+    }
+
+    std::map<unsigned long, KeyFrame::Ptr> GetAllKeyFrames(){
+        return mmAllKeyFrames;
+    }
+
+    std::map<unsigned long, MapPoints::Ptr> GetActivateMapPoints(){
+        return mmActivateMapPoints;
+    }
+
     void CullOldActivateKF();
 
     void CullOldActivateMapPoint();
