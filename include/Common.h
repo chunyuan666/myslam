@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+#include <atomic>
+
 #include <memory>
 #include <string>
 #include <list>

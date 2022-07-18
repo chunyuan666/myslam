@@ -40,7 +40,7 @@ System::System(const std::string& config_file){
 
     mBackend = std::make_shared<Backend>();
     mBackend->SetMap(mMap);
-
+    mBackend->SetCamera(mCameraLeft);
     
     
 

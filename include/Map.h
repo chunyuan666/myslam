@@ -24,10 +24,12 @@ public:
      * @brief 插入外点的ID
      * 
     */
-    void InserOutLier(const long &map_id){
+    void InserOutLier(const unsigned long &map_id){
         mlOutlierMapPoints.push_back(map_id);
     }
-
+    /**
+     * @brief
+     * */
     void SetNumActivateMap(const int &num){
         mNumActivateMap = num;
     }
@@ -50,7 +52,7 @@ public:
 
     void InserActivateMapPoints(const MapPoints::Ptr &MapPoint);
 
-    void RemoveActivateMapPoints();
+    void RemoveOutlierMapPoints();
 
 
 public:

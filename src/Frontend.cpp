@@ -44,7 +44,7 @@ namespace myslam {
         if( num_maps < mnFeaturesTrackingBad )
             return false;
         // 将初始化帧作为关键帧插入
-        InserKeyFrame();
+        InsertKeyFrame();
         return true;
     }
 
@@ -154,7 +154,7 @@ namespace myslam {
             //　三角化新的地图点
             CrateNewMapPoints();
             //　插入关键帧
-            InserKeyFrame();
+            InsertKeyFrame();
         }
     }
 
@@ -278,7 +278,7 @@ namespace myslam {
     }
 
     //　插入关键帧
-    bool Frontend::InserKeyFrame(){
+    bool Frontend::InsertKeyFrame(){
         KeyFrame::Ptr newKeyFrame = std::make_shared<KeyFrame>(mCurrentFrame);
         mBackend->InserKeyFrame(newKeyFrame);// 插入后端
         return true;

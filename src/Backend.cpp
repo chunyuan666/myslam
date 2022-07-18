@@ -6,16 +6,22 @@ namespace myslam{
 
     Backend::Backend(){
         mbNeedOptimize = false;
+        mbBackendIsRunning.store(true);
         std::thread([this] { Running(); });
     }
 
+
     void Backend::Running(){
-        while(mbNeedOptimize){
+        while(mbBackendIsRunning.load()){
             while(CheckNewKeyFrame()){
                 ProcessKeyFrame();
             }
             //　局部优化位姿和地图
-            // Optimizer::OptimizeActivateMap(mMap);
+            if(mbNeedOptimize){
+                Optimizer::OptimizeActivateMap(mMap, mCameraLeft);
+                mbNeedOptimize = false;
+            }
+
         }
     }
 

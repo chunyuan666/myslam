@@ -33,7 +33,14 @@ public:
         mMap = map;
     }
 
-    
+    void StopBackend(){
+        mbNeedOptimize = false;
+        mbBackendIsRunning = false;
+    }
+
+    void SetCamera(const Camera::Ptr &cam){
+        mCameraLeft = cam;
+    }
     
 
 public:
@@ -43,9 +50,11 @@ private:
     std::list<KeyFrame::Ptr> mlpNewkeyFrames;
     bool mbNeedOptimize = false;
     KeyFrame::Ptr mCurrentKeyFrame;
-    KeyFrame::Ptr mLastKeyFrame;
+    Camera::Ptr mCameraLeft;
     Map::Ptr mMap;
-    
+
+    std::atomic<bool> mbBackendIsRunning{};
+
 
 };
 

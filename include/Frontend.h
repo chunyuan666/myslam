@@ -113,7 +113,7 @@ public:
      * @brief 插入关键帧
      * 
     */
-    bool InserKeyFrame();
+    bool InsertKeyFrame();
 
     /**
      * @brief　追踪函数

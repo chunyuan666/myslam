@@ -12,6 +12,8 @@ message(STATUS ${PROJECT_SOURCE_DIR})
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
+include_directories(SYSTEM "/foo/bar")
+
 #Eigen
 #include_directories("/usr/include/eigen3")
 find_package(Eigen3 3.1.0 REQUIRED)

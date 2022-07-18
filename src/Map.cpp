@@ -87,7 +87,27 @@ namespace myslam{
     void Map::CullOldActivateMapPoint() {
         for(auto iter = mmActivateMapPoints.begin(); iter!=mmActivateMapPoints.end();){
             if(iter->second->GetActivateObsCnt() <= 0){
-                mmActivateMapPoints.erase(iter);
+                mmActivateMapPoints.erase(iter++);
+            }else{
+                iter++;
+            }
+        }
+    }
+
+    void Map::RemoveOutlierMapPoints() {
+        for(auto iter = mmActivateMapPoints.begin(); iter != mmActivateMapPoints.end();){
+            auto mp = iter->second;
+            if(mp->mbIsOutlier){
+                mmActivateMapPoints.erase(iter++);
+            }else{
+                iter++;
+            }
+        }
+
+        for(auto iter = mmAllMapPoints.begin(); iter != mmAllMapPoints.end();){
+            auto mp = iter->second;
+            if(mp->mbIsOutlier){
+                mmAllMapPoints.erase(iter++);
             }else{
                 iter++;
             }
