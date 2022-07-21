@@ -3,6 +3,9 @@
 
 #include <iostream>
 
+#include <atomic>
+#include <mutex>
+
 #include <memory>
 #include <string>
 #include <list>

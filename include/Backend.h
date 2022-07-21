@@ -15,16 +15,15 @@ public:
     Backend();
     void Running();
 
-    void InserKeyFrame(const KeyFrame::Ptr &kf){
+    void InsertKeyFrame(const KeyFrame::Ptr &kf){
+        std::unique_lock<std::mutex> lock(mMutexNewKFs);
         mlpNewkeyFrames.push_back(kf);
         mbNeedOptimize = true;
     }
 
     bool CheckNewKeyFrame(){
-        if(!mlpNewkeyFrames.empty()){
-            return true;
-        }
-        return false;
+        std::unique_lock<std::mutex> lock(mMutexNewKFs);
+        return (!mlpNewkeyFrames.empty());
     }
 
     void ProcessKeyFrame();
@@ -33,20 +32,31 @@ public:
         mMap = map;
     }
 
-    
+    void StopBackend(){
+        mbNeedOptimize = false;
+        mbBackendIsRunning = false;
+    }
+
+    void SetCamera(const Camera::Ptr &cam){
+        mCameraLeft = cam;
+    }
     
 
 public:
     typedef std::shared_ptr<Backend> Ptr;
+    bool mbNeedOptimize = false;
     
 private:
     std::list<KeyFrame::Ptr> mlpNewkeyFrames;
-    bool mbNeedOptimize = false;
     KeyFrame::Ptr mCurrentKeyFrame;
-    KeyFrame::Ptr mLastKeyFrame;
+    Camera::Ptr mCameraLeft;
     Map::Ptr mMap;
-    
 
+    std::atomic<bool> mbBackendIsRunning;
+
+    std::mutex mMutexNewKFs;
+
+    std::thread mBackendHandle;
 };
 
 

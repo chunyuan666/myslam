@@ -44,7 +44,7 @@ namespace myslam {
         if( num_maps < mnFeaturesTrackingBad )
             return false;
         // 将初始化帧作为关键帧插入
-        InserKeyFrame();
+        InsertKeyFrame();
         return true;
     }
 
@@ -135,11 +135,11 @@ namespace myslam {
         // 匹配特征点,用光流法匹配，追踪上一帧和当前帧
         MatchLastFrameByLKFlow();
         //　估计当前帧位姿
-        unsigned long numTrackingInliers = EstimatePose();
+        unsigned long trackingInliers = EstimatePose();
         
-        if( numTrackingInliers >= mnFeaturesInitGood ){
+        if(trackingInliers >= mnFeaturesInitGood ){
             mStatus = TrackStatus::GOOD;
-        }else if( numTrackingInliers >= mnFeaturesTrackingBad && numTrackingInliers < mnFeaturesTrackingGood){
+        }else if(trackingInliers >= mnFeaturesTrackingBad && trackingInliers < mnFeaturesTrackingGood){
             mStatus = TrackStatus::BAD;
         }else{
             mStatus = TrackStatus::LOST;
@@ -154,7 +154,7 @@ namespace myslam {
             //　三角化新的地图点
             CrateNewMapPoints();
             //　插入关键帧
-            InserKeyFrame();
+            InsertKeyFrame();
         }
     }
 
@@ -278,9 +278,13 @@ namespace myslam {
     }
 
     //　插入关键帧
-    bool Frontend::InserKeyFrame(){
+    bool Frontend::InsertKeyFrame(){
         KeyFrame::Ptr newKeyFrame = std::make_shared<KeyFrame>(mCurrentFrame);
-        mBackend->InserKeyFrame(newKeyFrame);// 插入后端
+        if(mBackend){
+            mBackend->InsertKeyFrame(newKeyFrame);// 插入后端
+            mBackend->mbNeedOptimize = true;
+        }
+            
         return true;
     }
 }

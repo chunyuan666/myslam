@@ -32,20 +32,24 @@ namespace myslam{
         }
 
         std::map<unsigned long, std::weak_ptr<Feature> > GetActivateObservation(){
+            std::unique_lock<std::mutex> lock(mObservationMutex);
             return mActiveObservation;
         }
 
         void AddObservation(unsigned long id, const std::weak_ptr<Feature>& feat){
+            std::unique_lock<std::mutex> lock(mObservationMutex);
             mObservation.insert({id, feat});
             mObservedCnt++;
         }
         
         void AddActivateObservation(unsigned long id, const std::shared_ptr<Feature>& feat){
+            std::unique_lock<std::mutex> lock(mObservationMutex);
             mActiveObservation.insert({id, feat});
             mActiveObesedrCnt++;
         }
 
         void RemoveActiveObservation(const std::shared_ptr<Feature>& feat){
+            std::unique_lock<std::mutex> lock(mObservationMutex);
             for(auto iter = mActiveObservation.begin();iter!=mActiveObservation.end();iter++){
                 if(iter->second.lock() == feat){
                     mActiveObservation.erase(iter);
@@ -56,6 +60,7 @@ namespace myslam{
         }
 
         void RemoveObservation(std::shared_ptr<Feature> &feature){
+            std::unique_lock<std::mutex> lock(mObservationMutex);
             for(auto iter = mObservation.begin(); iter != mObservation.end(); iter++){
                 if(iter->second.lock() == feature){
                     mObservation.erase(iter);
@@ -65,11 +70,13 @@ namespace myslam{
             }
         }
 
-        unsigned long GetActivateObsCnt(){
+        unsigned long GetActivateObsCnt() {
+            std::unique_lock<std::mutex> lck(mObservationMutex);
             return mActiveObesedrCnt;
         }
 
-        unsigned long GetObsCnt(){
+        unsigned long GetObsCnt() {
+            std::unique_lock<std::mutex> lock(mObservationMutex);
             return mObservedCnt;
         }
 
@@ -88,7 +95,9 @@ namespace myslam{
         std::map<unsigned long, std::weak_ptr<Feature> > mActiveObservation;
 
         unsigned long mObservedCnt = 0;
-        unsigned long mActiveObesedrCnt = 0; 
+        unsigned long mActiveObesedrCnt = 0;
+
+        std::mutex mObservationMutex;
     };
 }
 

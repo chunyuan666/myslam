@@ -4,6 +4,7 @@
 namespace myslam{
     
     void Map::InserMapPoint(const MapPoints::Ptr &MapPoint){
+        std::unique_lock<std::mutex> lock(mMutexData);
         //还没有存在地图中
         if(mmAllMapPoints.find(MapPoint->mid) == mmAllMapPoints.end()){
             mmAllMapPoints.insert({MapPoint->mid, MapPoint});
@@ -13,6 +14,7 @@ namespace myslam{
     }
 
     void Map::InserActivateMapPoints(const MapPoints::Ptr &MapPoint){
+        std::unique_lock<std::mutex> lock(mMutexData);
         //还没有存在地图中
         if(mmActivateMapPoints.find(MapPoint->mid) == mmAllMapPoints.end()){
             mmActivateMapPoints.insert({MapPoint->mid, MapPoint});
@@ -23,15 +25,17 @@ namespace myslam{
 
     void Map::InserKeyFrame(const KeyFrame::Ptr &kf){
         mpCurrentKeyFrame = kf;
-        //还没有存在地图中
-        if(mmAllKeyFrames.find(kf->mKeyFrameId) == mmAllKeyFrames.end()){
-            mmAllKeyFrames.insert(std::make_pair(kf->mKeyFrameId, kf));
-            mmActivateKeyFrames.insert(std::make_pair(kf->mKeyFrameId, kf));
-        }else{ // 在地图里了
-            mmAllKeyFrames[kf->mKeyFrameId] = kf;
-            mmActivateKeyFrames[kf->mKeyFrameId] = kf;
+        {
+            std::unique_lock<std::mutex> lock(mMutexData);
+            //还没有存在地图中
+            if(mmAllKeyFrames.find(kf->mKeyFrameId) == mmAllKeyFrames.end()){
+                mmAllKeyFrames.insert(std::make_pair(kf->mKeyFrameId, kf));
+                mmActivateKeyFrames.insert(std::make_pair(kf->mKeyFrameId, kf));
+            }else{ // 在地图里了
+                mmAllKeyFrames[kf->mKeyFrameId] = kf;
+                mmActivateKeyFrames[kf->mKeyFrameId] = kf;
+            }
         }
-
         //　插入地图点
         for(auto &fea : kf->mvpFeatureLeft){
             auto map = fea->mpMapPoint.lock();
@@ -49,6 +53,7 @@ namespace myslam{
     }
 
     void Map::CullOldActivateKF(){
+        std::unique_lock<std::mutex> lock(mMutexData);
         if(!mpCurrentKeyFrame)
             return;
         auto T_wc = mpCurrentKeyFrame->GetPose().inverse();
@@ -85,9 +90,31 @@ namespace myslam{
     }
     //　删除观测为0的局部地图点
     void Map::CullOldActivateMapPoint() {
+        std::unique_lock<std::mutex> lock(mMutexData);
         for(auto iter = mmActivateMapPoints.begin(); iter!=mmActivateMapPoints.end();){
             if(iter->second->GetActivateObsCnt() <= 0){
-                mmActivateMapPoints.erase(iter);
+                mmActivateMapPoints.erase(iter++);
+            }else{
+                iter++;
+            }
+        }
+    }
+
+    void Map::RemoveOutlierMapPoints() {
+        std::unique_lock<std::mutex> lock(mMutexData);
+        for(auto iter = mmActivateMapPoints.begin(); iter != mmActivateMapPoints.end();){
+            auto mp = iter->second;
+            if(mp->mbIsOutlier){
+                mmActivateMapPoints.erase(iter++);
+            }else{
+                iter++;
+            }
+        }
+
+        for(auto iter = mmAllMapPoints.begin(); iter != mmAllMapPoints.end();){
+            auto mp = iter->second;
+            if(mp->mbIsOutlier){
+                mmAllMapPoints.erase(iter++);
             }else{
                 iter++;
             }

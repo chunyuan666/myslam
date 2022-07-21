@@ -12,6 +12,8 @@ message(STATUS ${PROJECT_SOURCE_DIR})
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
+include_directories(SYSTEM "/foo/bar")
+
 #Eigen
 #include_directories("/usr/include/eigen3")
 find_package(Eigen3 3.1.0 REQUIRED)
@@ -57,6 +59,7 @@ set(THIRD_PARTY_LIBS
         fmt
         g2o_core g2o_stuff g2o_types_sba g2o_solver_csparse g2o_csparse_extension
         ${CSPARSE_LIBRARY}
+        pthread
         )
 
 ## 设置源文件路径、头文件路径

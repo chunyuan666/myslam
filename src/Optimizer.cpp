@@ -167,12 +167,20 @@ namespace myslam{
             }
             if(mp->GetObsCnt()<=0){ //该点已经没有观测
                 mp->mbIsOutlier = true; //标记为外点
-                Map->InserOutLier(mp->mid); //插入地图的外点，稍后消除
+                // Map->InserOutLier(mp->mid); //插入地图的外点，稍后消除
             }
             // 释放该地图点的指针,feat不再持有该地图点的指针
             feat->mpMapPoint.reset();
         }
-        //设置
+        //设置当前帧的位姿
+        for(auto &v : Vertex_KFs)
+            KFs[v.first]->SetPose(v.second->estimate());
+        for(auto &m : Vertex_Mps)
+            MPs[m.first]->SetPose(m.second->estimate());
+
+        //删除外点
+        Map->RemoveOutlierMapPoints();
+        Map->CullOldActivateMapPoint();
     }
 }
 

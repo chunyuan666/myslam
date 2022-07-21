@@ -40,7 +40,9 @@ System::System(const std::string& config_file){
 
     mBackend = std::make_shared<Backend>();
     mBackend->SetMap(mMap);
-
+    mBackend->SetCamera(mCameraLeft);
+    
+    mFrontend->SetBackend(mBackend);
     
     
 
@@ -48,7 +50,7 @@ System::System(const std::string& config_file){
 
 bool System::Run(const cv::Mat &ImgLeft, const cv::Mat &ImgRight, const double &TimeStamp){
     mFrontend->Running(ImgLeft, ImgRight, TimeStamp);
-
+    return true;
 }
 
 void System::GetCameraPara(){

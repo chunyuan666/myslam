@@ -113,7 +113,7 @@ public:
      * @brief 插入关键帧
      * 
     */
-    bool InserKeyFrame();
+    bool InsertKeyFrame();
 
     /**
      * @brief　追踪函数
@@ -136,6 +136,12 @@ public:
     */
     unsigned long CrateNewMapPoints();
 
+    /**
+     * @brief 设置后端
+    */
+    void SetBackend(const Backend::Ptr &backend){
+        mBackend = backend;
+    }
 
 public:
     typedef std::shared_ptr<Frontend> Ptr;
