@@ -36,6 +36,11 @@ namespace myslam{
             return mActiveObservation;
         }
 
+        std::map<unsigned long, std::weak_ptr<Feature> > GetObservation(){
+            std::unique_lock<std::mutex> lock(mObservationMutex);
+            return mObservation;
+        }
+
         void AddObservation(unsigned long id, const std::weak_ptr<Feature>& feat){
             std::unique_lock<std::mutex> lock(mObservationMutex);
             mObservation.insert({id, feat});

@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 3.0)
 project(myslam)
 
-set(CMAKE_CXX_FLAGS "-std=c++14  -Wall -g")
-set(CMAKE_CXX_FLAGS_DEBUG "-std=c++14  -fopenmp -pthread")
+set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_CXX_FLAGS "-std=c++14 -O3 -Wall -g")
+#set(CMAKE_CXX_FLAGS_DEBUG "-std=c++14 -O3 -fopenmp -pthread")
+set(CMAKE_CXX_FLAGS_Release "-std=c++14 -O3 -fopenmp -pthread")
 
 # 第三方编译库
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)

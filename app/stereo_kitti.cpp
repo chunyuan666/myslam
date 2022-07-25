@@ -45,10 +45,12 @@ int main(int argc, char **argv){
         }
 
         //　开始运行
-        slam->Run(ImgLeft, ImgRight, TimeStamp);
+        bool isGood = slam->Run(ImgLeft, ImgRight, TimeStamp);
+        if(!isGood)
+            break; 
    }
 
-
+    slam->Stop();
     
 
 

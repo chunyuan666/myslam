@@ -15,6 +15,11 @@ public:
     Backend();
     void Running();
 
+    void Stop(){
+        mbBackendIsRunning.store(false);
+        mBackendHandle.join();
+    }
+
     void InsertKeyFrame(const KeyFrame::Ptr &kf){
         std::unique_lock<std::mutex> lock(mMutexNewKFs);
         mlpNewkeyFrames.push_back(kf);

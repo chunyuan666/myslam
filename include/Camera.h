@@ -31,7 +31,7 @@ public:
     cv::Point2f Camera2Pixel(const Vector3d &p_cam) const{
         float u = mfx * p_cam[0] / p_cam[2] + mcx;
         float v = mfy * p_cam[1] / p_cam[2] + mcy;
-        LOG(INFO) << "p_x: \n" << Vec2d(u,v).matrix();
+        //LOG(INFO) << "p_x: \n" << Vec2d(u,v).matrix();
         return {u, v};
     }
 
@@ -41,8 +41,8 @@ public:
      * */
     cv::Point2f World2Pixel(const Vector3d &p_world, const SE3 &T_cw = SE3_Identity){
         Vector3d p_cam = T_cw * p_world;
-        LOG(INFO) << "T_CW: \n" << T_cw.matrix() << "\n" << "p_w: \n" << p_world.matrix();
-        LOG(INFO) << "p_cam: \n" << p_cam;
+        //LOG(INFO) << "T_CW: \n" << T_cw.matrix() << "\n" << "p_w: \n" << p_world.matrix();
+        //LOG(INFO) << "p_cam: \n" << p_cam;
         return Camera2Pixel(p_cam);
     }
 

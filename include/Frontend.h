@@ -101,7 +101,7 @@ public:
      * ＠param[in] 图像2的特征点
      * ＠param[out] 三角化后地图点的坐标
      * */
-    static void Triangulation(const SE3 &P1, const SE3 &P2,
+    static void Triangulation(const Mat34d &P1, const Mat34d &P2,
                        const cv::KeyPoint &Kp1, const cv::KeyPoint &Kp2, Vector3d &X3D);
 
     /**

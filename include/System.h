@@ -26,6 +26,10 @@ public:
     */
     explicit System(const std::string& config_file);
 
+    void Stop(){
+        mBackend->Stop();
+    }
+
     /**
      * @brief 获得相机参数
     */

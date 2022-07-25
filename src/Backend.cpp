@@ -18,10 +18,12 @@ namespace myslam{
             }
             //　局部优化位姿和地图
             if(!CheckNewKeyFrame()&&mbNeedOptimize){
+                LOG(INFO) << "**********开始后端优化***********";
                 Optimizer::OptimizeActivateMap(mMap, mCameraLeft);
+                LOG(INFO) << "**********结束后端优化***********";
                 mbNeedOptimize = false;
             }
-            usleep(1000);
+            //usleep(1000);
         }
     }
 

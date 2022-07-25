@@ -1,14 +1,14 @@
 #include "Frontend.h"
 #include "Common.h"
-#include "g2o_types.h"
 
 namespace myslam {
 
 
     bool Frontend::Running(const cv::Mat &leftImg, const cv::Mat &rightImg, const double timestamp) {
         mCurrentFrame = std::make_shared<Frame>(leftImg, rightImg, timestamp, mCameraLeft->GetK());
+        // LOG(INFO) << "第" << mCurrentFrame->mFrameId << "帧";
         /***********TODO*****************/
-        switch (mStatus) {
+         switch (mStatus) {
             case TrackStatus::INIT:
                 if(StereoInit()){
                     mStatus = TrackStatus::GOOD;
@@ -20,6 +20,8 @@ namespace myslam {
                 break;
             case TrackStatus::LOST:
                 /**TODO*/
+                LOG(INFO) << "LOST!";
+                return false;
                 break;
         }
 
@@ -80,6 +82,7 @@ namespace myslam {
             mCurrentFrame->mvpFeatureLeft.push_back(feature);
             cnt++;
         }
+        //LOG(INFO) << "一共提取新的特征点个数为" << cnt;
         return cnt;
     }
 
@@ -136,8 +139,8 @@ namespace myslam {
         MatchLastFrameByLKFlow();
         //　估计当前帧位姿
         unsigned long trackingInliers = EstimatePose();
-        
-        if(trackingInliers >= mnFeaturesInitGood ){
+        LOG(INFO) << "trackingInliers : " << trackingInliers;
+        if(trackingInliers >= mnFeaturesTrackingGood ){
             mStatus = TrackStatus::GOOD;
         }else if(trackingInliers >= mnFeaturesTrackingBad && trackingInliers < mnFeaturesTrackingGood){
             mStatus = TrackStatus::BAD;
@@ -173,8 +176,10 @@ namespace myslam {
             Kp2 = mCurrentFrame->mvpFeatureRight[i]->mKeyPoint;
             SE3 p1 = mCameraLeft->GetCameraPose();
             SE3 p2 = mCameraRight->GetCameraPose();
+            Mat34d P1 = mCameraLeft->GetK() * p1.matrix3x4();
+            Mat34d P2 = mCameraLeft->GetK() * p2.matrix3x4();
             Vector3d X3D;
-            Triangulation(p1, p2, Kp1, Kp2, X3D);
+            Triangulation(P1, P2, Kp1, Kp2, X3D);
             // LOG(INFO) << "X3D: \n" << X3D;
             if(X3D[2] < 0)
                 continue;
@@ -186,6 +191,8 @@ namespace myslam {
             NewPoint->AddObservation(mCurrentFrame->mFrameId, mCurrentFrame->mvpFeatureLeft[i]);
             mMap->InserMapPoint(NewPoint);
         }
+
+        //LOG(INFO) << "新增" << nGoodPoints << "个" << "地图点";
         return nGoodPoints;
     }
 
@@ -201,8 +208,7 @@ namespace myslam {
             // 
             if(mapPoint){
                 mapPoint->mbIsOutlier = true;
-                mMap->InserOutLier(mapPoint->mid); //插入地图中的外点，等到局部优化时再删除
-                mapPoint.reset();
+                fea->mpMapPoint.reset();
             }
             fea->IsOutLier = false;
         }
@@ -230,9 +236,10 @@ namespace myslam {
                                  cv::OPTFLOW_USE_INITIAL_FLOW);
         unsigned long nGoodPoints = 0;
         for (int i = 0; i < status.size(); i++) {
-            if (status[i]) {
+            if (status[i] && !mLastFrame->mvpFeatureLeft[i]->mpMapPoint.expired()) {
                 cv::KeyPoint new_kp(vFeaPointsCurrent[i], 7);
                 auto feature = std::make_shared<Feature>(new_kp);
+                feature->mpMapPoint = mLastFrame->mvpFeatureLeft[i]->mpMapPoint;
                 mCurrentFrame->mvpFeatureLeft.push_back(feature);
                 nGoodPoints++;
             }
@@ -249,13 +256,13 @@ namespace myslam {
      * ＠param[in] 图像2的特征点
      * ＠param[out] 三角化后地图点的坐标
      * */
-    void Frontend::Triangulation(const SE3 &P1, const SE3 &P2,
+    void Frontend::Triangulation(const Mat34d &P1, const Mat34d &P2,
                                  const cv::KeyPoint &Kp1, const cv::KeyPoint &Kp2, 
                                  Vector3d &X3D) {
         cv::Mat A(4, 4, CV_32F);
         cv::Mat p1, p2;
-        cv::eigen2cv(P1.matrix3x4(), p1);
-        cv::eigen2cv(P2.matrix3x4(), p2);
+        cv::eigen2cv(P1, p1);
+        cv::eigen2cv(P2, p2);
         static_cast<cv::Mat>(Kp1.pt.x * p1.row(2) - p1.row(0)).copyTo(A.row(0));
         static_cast<cv::Mat>(Kp1.pt.y * p1.row(2) - p1.row(1)).copyTo(A.row(1));
         static_cast<cv::Mat>(Kp2.pt.x * p2.row(2) - p2.row(0)).copyTo(A.row(2));
