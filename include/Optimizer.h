@@ -9,8 +9,8 @@
 namespace myslam{
     class Optimizer{
     public:
-        static unsigned long PoseOptimization(const Frame::Ptr &Frame);
-        static unsigned long OptimizeActivateMap(const Map::Ptr &Map, const Camera::Ptr &camera);
+        static unsigned long PoseOptimization(Frame::Ptr &Frame);
+        static unsigned long OptimizeActivateMap(Map::Ptr &Map, const Camera::Ptr &camera);
     };
 }
 

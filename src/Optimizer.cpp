@@ -1,7 +1,7 @@
 #include "Optimizer.h"
 
 namespace myslam{
-    unsigned long Optimizer::PoseOptimization(const Frame::Ptr &Frame) {
+    unsigned long Optimizer::PoseOptimization(Frame::Ptr &Frame) {
         // 用G2O来估计位姿
         // Step 1：构造g2o优化器, BlockSolver_6_3表示：位姿 _PoseDim 为6维，路标点 _LandmarkDim 是3维
         typedef g2o::BlockSolver_6_3 BlockSolverType;
@@ -69,13 +69,13 @@ namespace myslam{
         }
         // 5.计算位姿
         Frame->SetPose(vertex->estimate());
-        LOG(INFO) << "\n" << "第" << Frame->mFrameId << "帧" << "估计后位姿：\n" << vertex->estimate().matrix();
+        // LOG(INFO) << "\n" << "第" << Frame->mFrameId << "帧" << "估计后位姿：\n" << vertex->estimate().matrix();
         return edges.size()-nOutLiers;
     }
 
-    unsigned long Optimizer::OptimizeActivateMap(const Map::Ptr &Map, const Camera::Ptr &camera) {
+    unsigned long Optimizer::OptimizeActivateMap(Map::Ptr &Map, const Camera::Ptr &camera) {
         typedef g2o::BlockSolver_6_3 BlockSolverType;
-        typedef g2o::LinearSolverEigen<BlockSolverType::PoseMatrixType> LinearSolverType;
+        typedef g2o::LinearSolverCSparse<BlockSolverType::PoseMatrixType> LinearSolverType;
         auto solver = new g2o::OptimizationAlgorithmLevenberg(g2o::make_unique<BlockSolverType>(
         g2o::make_unique<LinearSolverType>()));
         g2o::SparseOptimizer optimizer;
@@ -138,12 +138,13 @@ namespace myslam{
                 FeatsAndEdges.insert(std::make_pair(feat, e));
             }
         }
-        int cntOutlier = 0;
-        int iteration = 4;
-        for(int i = 0; i < iteration; i++){
+        int cntOutlier = 0, cntInlier = 0;
+        int i = 0,iteration = 5;
+        while(i < iteration){
             optimizer.initializeOptimization(0);
             optimizer.optimize(10);
             cntOutlier = 0;
+            cntInlier = 0;
             for(auto &fe : FeatsAndEdges){
                 auto feat = fe.first;
                 auto e = fe.second;
@@ -154,13 +155,23 @@ namespace myslam{
                     feat->IsOutLier = true;
                 }else{
                     e->setLevel(0);
+                    cntInlier++;
                     feat->IsOutLier = false;
                 }
                 if(i>=iteration/2)
                     e->setRobustKernel(nullptr);
             }
+            double inlierRatio = cntInlier / ( cntInlier+cntOutlier );
+            LOG(INFO) << "inlierRatio: " << inlierRatio;
+            if(inlierRatio > 0.5){
+                break;
+            }else{
+                chi2_th *= 2;
+                i++;
+            }
+                
         }
-        LOG(INFO) << "OUTLIERS nums is:  " << cntOutlier;
+        //LOG(INFO) << "OUTLIERS nums is:  " << cntOutlier;
         // 处理外点
         // 遍历当前边和特征点
         for(auto &fe : FeatsAndEdges){
@@ -173,17 +184,20 @@ namespace myslam{
                 mp->RemoveObservation(feat);
                 if(mp->GetObsCnt()<=0){ //该点已经没有观测
                     mp->mbIsOutlier = true; //标记为外点
-                    // Map->InserOutLier(mp->mid); //插入地图的外点，稍后消除
                 }
                 // 释放该地图点的指针,feat不再持有该地图点的指针
                 feat->mpMapPoint.reset();
             }
         }
         //设置当前帧的位姿
-        for(auto &v : Vertex_KFs)
+        for(auto &v : Vertex_KFs){
             KFs[v.first]->SetPose(v.second->estimate());
-        for(auto &m : Vertex_Mps)
-            MPs[m.first]->SetPose(m.second->estimate());
+            LOG(INFO) << "矫正后的位姿： id: " << KFs[v.first]->mFrameId << "\n" << v.second->estimate().matrix3x4(); 
+        }
+        for(auto &m : Vertex_Mps){
+             MPs[m.first]->SetPose(m.second->estimate());
+        }
+           
 
         //删除外点
         Map->RemoveOutlierMapPoints();

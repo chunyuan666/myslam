@@ -139,7 +139,7 @@ namespace myslam {
         MatchLastFrameByLKFlow();
         //　估计当前帧位姿
         unsigned long trackingInliers = EstimatePose();
-        LOG(INFO) << "trackingInliers : " << trackingInliers;
+        LOG(INFO) << "第 " << mCurrentFrame->mFrameId << " 帧" << "trackingInliers : " << trackingInliers;
         if(trackingInliers >= mnFeaturesTrackingGood ){
             mStatus = TrackStatus::GOOD;
         }else if(trackingInliers >= mnFeaturesTrackingBad && trackingInliers < mnFeaturesTrackingGood){
@@ -147,7 +147,6 @@ namespace myslam {
         }else{
             mStatus = TrackStatus::LOST;
         }
-        mMotion = mCurrentFrame->GetPose() * mLastFrame->GetPose().inverse();
 
         if(mStatus == TrackStatus::BAD){
             // 查找新的特征点
@@ -159,6 +158,8 @@ namespace myslam {
             //　插入关键帧
             InsertKeyFrame();
         }
+
+        mMotion = mCurrentFrame->GetPose() * mLastFrame->GetPose().inverse();
     }
 
     // 创造新的地图点
@@ -174,10 +175,10 @@ namespace myslam {
                 continue;
             Kp1 = mCurrentFrame->mvpFeatureLeft[i]->mKeyPoint;
             Kp2 = mCurrentFrame->mvpFeatureRight[i]->mKeyPoint;
-            SE3 p1 = mCameraLeft->GetCameraPose();
-            SE3 p2 = mCameraRight->GetCameraPose();
-            Mat34d P1 = mCameraLeft->GetK() * p1.matrix3x4();
-            Mat34d P2 = mCameraLeft->GetK() * p2.matrix3x4();
+            SE3 pose1 = mCameraLeft->GetCameraPose();
+            SE3 pose2 = mCameraRight->GetCameraPose();
+            Mat34d P1 = mCameraLeft->GetK() * pose1.matrix3x4();
+            Mat34d P2 = mCameraLeft->GetK() * pose2.matrix3x4();
             Vector3d X3D;
             Triangulation(P1, P2, Kp1, Kp2, X3D);
             // LOG(INFO) << "X3D: \n" << X3D;
@@ -192,7 +193,7 @@ namespace myslam {
             mMap->InserMapPoint(NewPoint);
         }
 
-        //LOG(INFO) << "新增" << nGoodPoints << "个" << "地图点";
+        // LOG(INFO) << "新增" << nGoodPoints << "个" << "地图点";
         return nGoodPoints;
     }
 
@@ -205,9 +206,9 @@ namespace myslam {
             if(!fea->IsOutLier)
                 continue;
             auto mapPoint = fea->mpMapPoint.lock();
-            // 
             if(mapPoint){
                 mapPoint->mbIsOutlier = true;
+                mapPoint->RemoveObservation(fea);
                 fea->mpMapPoint.reset();
             }
             fea->IsOutLier = false;
@@ -240,6 +241,7 @@ namespace myslam {
                 cv::KeyPoint new_kp(vFeaPointsCurrent[i], 7);
                 auto feature = std::make_shared<Feature>(new_kp);
                 feature->mpMapPoint = mLastFrame->mvpFeatureLeft[i]->mpMapPoint;
+                feature->mpMapPoint.lock()->AddObservation(mCurrentFrame->mFrameId, feature);
                 mCurrentFrame->mvpFeatureLeft.push_back(feature);
                 nGoodPoints++;
             }
