@@ -143,6 +143,25 @@ public:
         mBackend = backend;
     }
 
+    bool isInBorder(const cv::Point2f &point){
+        float x = point.x;
+        float y = point.y;
+        if((x >= 0 && x <= mCurrentFrame->mImgRight.cols)
+            && (y >= 0 && y <= mCurrentFrame->mImgRight.rows))
+            return true;
+        else
+            return false;
+    }
+
+    void SetObsForKF(const KeyFrame::Ptr &kf){
+        for(auto &feat : kf->mvpFeatureLeft){
+            auto mp = feat->mpMapPoint.lock();
+            if(mp){
+                mp->AddObservation(kf->mKeyFrameId, feat);
+            }
+        }
+    }
+
 public:
     typedef std::shared_ptr<Frontend> Ptr;
     Backend::Ptr mBackend;

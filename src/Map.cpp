@@ -8,8 +8,10 @@ namespace myslam{
         //还没有存在地图中
         if(mmAllMapPoints.find(MapPoint->mid) == mmAllMapPoints.end()){
             mmAllMapPoints.insert({MapPoint->mid, MapPoint});
+            mmActivateMapPoints.insert({MapPoint->mid, MapPoint});
         }else{  // 在地图里了
             mmAllMapPoints[MapPoint->mid] = MapPoint;
+            mmActivateMapPoints[MapPoint->mid] = MapPoint;
         }
     }
 
@@ -37,17 +39,17 @@ namespace myslam{
             }
         }
         //　插入地图点
-        for(auto &fea : kf->mvpFeatureLeft){
+        /*for(auto &fea : kf->mvpFeatureLeft){
             auto map = fea->mpMapPoint.lock();
             if(map){
                 map->AddActivateObservation(kf->mKeyFrameId, fea);
                 InserActivateMapPoints(map);
             }
-        }
+        }*/
 
         // 如果活跃帧大于阈值7．则删除一些活跃帧
         if(mmActivateKeyFrames.size() > mNumActivateMap){
-            CullOldActivateKF();
+            CullOldActivateKF2();
             CullOldActivateMapPoint();
         }
     }
@@ -66,13 +68,14 @@ namespace myslam{
             if(distance > maxDistance){
                 maxDistance = distance;
                 maxID = kf.first;
-            }else if(distance < minDistance){
+            }
+            if(distance < minDistance){
                 minDistance = distance;
                 minID = kf.first;
             }
         }
         unsigned long toDelId;
-        double min_th = 0.2;
+        double min_th = 0.8;
         if(minDistance < min_th){
             toDelId = minID;
         }else{
@@ -82,22 +85,47 @@ namespace myslam{
         for(auto &feat : mmActivateKeyFrames[toDelId]->mvpFeatureLeft){
             auto map = feat->mpMapPoint.lock();
             if(map){
-                map->RemoveActiveObservation(feat);
+                map->RemoveObservation(feat);
             }
         }
         // 删除关键帧
         mmActivateKeyFrames.erase(toDelId);
+        LOG(INFO) << "----------remove keyframe ID: " << toDelId << "--------------";
+    }
+    void Map::CullOldActivateKF2(){
+        std::unique_lock<std::mutex> lock(mMutexData);
+        if(!mpCurrentKeyFrame)
+            return;
+        
+        unsigned long toDelId;
+        auto min_id = mmActivateKeyFrames.begin()->first;
+        toDelId = min_id;
+        
+        // 取消地图点对该帧的观测
+        for(auto &feat : mmActivateKeyFrames[toDelId]->mvpFeatureLeft){
+            auto map = feat->mpMapPoint.lock();
+            if(map){
+                map->RemoveObservation(feat);
+            }
+        }
+        // 删除关键帧
+        mmActivateKeyFrames.erase(toDelId);
+        LOG(INFO) << "----------remove keyframe ID: " << toDelId << "--------------";
     }
     //　删除观测为0的局部地图点
     void Map::CullOldActivateMapPoint() {
+         int cnt_landmark_removed = 0;
         std::unique_lock<std::mutex> lock(mMutexData);
         for(auto iter = mmActivateMapPoints.begin(); iter!=mmActivateMapPoints.end();){
-            if(iter->second->GetActivateObsCnt() <= 0){
+            if(iter->second->GetObsCnt() == 0){
                 mmActivateMapPoints.erase(iter++);
+                cnt_landmark_removed++;
             }else{
                 iter++;
             }
         }
+        LOG(INFO) << "Removed " << cnt_landmark_removed << " active landmarks  "
+                  << "remaining  " << mmActivateMapPoints.size();
     }
 
     void Map::RemoveOutlierMapPoints() {

@@ -48,7 +48,7 @@ Camera.fps: -1
 
 # valid feature numbers to decide the tracking / init status
 numFeatures.initGood: 100
-numFeatures.trackingGood: 70
+numFeatures.trackingGood: 50
 numFeatures.trackingBad: 10
 
 # ORB Extractor: Number of features when initalizing

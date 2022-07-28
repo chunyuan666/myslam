@@ -47,6 +47,7 @@ namespace myslam {
             return false;
         // 将初始化帧作为关键帧插入
         InsertKeyFrame();
+        LOG(INFO) << "map init finished! sum " << cnt << " map points.";
         return true;
     }
 
@@ -67,15 +68,13 @@ namespace myslam {
         } else {
             mORBExtractor->Detect(mCurrentFrame->mImgLeft, mask, KeyPoints);
         }
-        /*
         cv::Mat outimg;
         cv::drawKeypoints(mCurrentFrame->mImgLeft, KeyPoints, outimg,
                           cv::Scalar::all(-1), cv::DrawMatchesFlags::DEFAULT);
         LOG(INFO) << "sum OBR: " << KeyPoints.size();
         cv::imshow("ORB", outimg);
-        cv::waitKey(0);
+        cv::waitKey(5);
         cv::destroyAllWindows();
-        */
         unsigned long cnt = 0;
         for (auto &KeyPoint: KeyPoints) {
             Feature::Ptr feature = std::make_shared<Feature>(KeyPoint);
@@ -95,8 +94,9 @@ namespace myslam {
             vPointFeaLeft.push_back(feature->mKeyPoint.pt);
             auto map = feature->mpMapPoint.lock();
             if (map) {
-                cv::Point2f PointFeaRight = mCameraRight->World2Pixel(map->GetPose());
-                vPointFeaRight.push_back(PointFeaRight);
+                auto PointFeaRight = mCameraRight->World2Pixel(map->GetPose(),mCurrentFrame->GetPose());
+                if(isInBorder(PointFeaRight)) vPointFeaRight.push_back(PointFeaRight);
+                else vPointFeaRight.push_back(feature->mKeyPoint.pt);
             } else {
                 vPointFeaRight.push_back(feature->mKeyPoint.pt);
             }
@@ -181,15 +181,13 @@ namespace myslam {
             Mat34d P2 = mCameraLeft->GetK() * pose2.matrix3x4();
             Vector3d X3D;
             Triangulation(P1, P2, Kp1, Kp2, X3D);
-            // LOG(INFO) << "X3D: \n" << X3D;
+            //LOG(INFO) << "X3D: \n" << X3D;
             if(X3D[2] < 0)
                 continue;
             nGoodPoints++;
             // 2. 创建新的地图点
             MapPoints::Ptr NewPoint =  std::make_shared<MapPoints>(X3D);
             mCurrentFrame->mvpFeatureLeft[i]->mpMapPoint = NewPoint;
-            mCurrentFrame->mvpFeatureRight[i]->mpMapPoint = NewPoint;
-            NewPoint->AddObservation(mCurrentFrame->mFrameId, mCurrentFrame->mvpFeatureLeft[i]);
             mMap->InserMapPoint(NewPoint);
         }
 
@@ -224,7 +222,8 @@ namespace myslam {
             auto mapPoint = fea->mpMapPoint.lock();
             if(mapPoint && !mapPoint->mbIsOutlier){
                 cv::Point2f pointCurrent = mCameraLeft->World2Pixel(mapPoint->GetPose(),mCurrentFrame->GetPose());
-                vFeaPointsCurrent.push_back(pointCurrent);
+                if(isInBorder(pointCurrent)) vFeaPointsCurrent.push_back(pointCurrent);
+                else vFeaPointsCurrent.push_back(fea->mKeyPoint.pt);
             }else{
                 vFeaPointsCurrent.push_back(fea->mKeyPoint.pt);
             }
@@ -241,7 +240,6 @@ namespace myslam {
                 cv::KeyPoint new_kp(vFeaPointsCurrent[i], 7);
                 auto feature = std::make_shared<Feature>(new_kp);
                 feature->mpMapPoint = mLastFrame->mvpFeatureLeft[i]->mpMapPoint;
-                feature->mpMapPoint.lock()->AddObservation(mCurrentFrame->mFrameId, feature);
                 mCurrentFrame->mvpFeatureLeft.push_back(feature);
                 nGoodPoints++;
             }
@@ -289,11 +287,14 @@ namespace myslam {
     //　插入关键帧
     bool Frontend::InsertKeyFrame(){
         KeyFrame::Ptr newKeyFrame = std::make_shared<KeyFrame>(mCurrentFrame);
+        LOG(INFO) << "设第" << newKeyFrame->mFrameId << "帧" << "为关键帧id: " << newKeyFrame->mKeyFrameId;
+        // 为关键帧添加观测，使地图点能观测到该关键帧(地图点是不观测普通帧的)
+        SetObsForKF(newKeyFrame);
+        LOG(INFO) << "id: " << mCurrentFrame->mFrameId << "位姿:\n" << mCurrentFrame->GetPose().matrix3x4();
         if(mBackend){
             mBackend->InsertKeyFrame(newKeyFrame);// 插入后端
-            mBackend->mbNeedOptimize = true;
         }
-            
+        
         return true;
     }
 }

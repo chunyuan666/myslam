@@ -54,6 +54,8 @@ public:
     void InserActivateMapPoints(const MapPoints::Ptr &MapPoint);
 
     void RemoveOutlierMapPoints();
+    
+    void CullOldActivateKF2();
 
 
 public:

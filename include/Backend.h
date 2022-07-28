@@ -23,7 +23,6 @@ public:
     void InsertKeyFrame(const KeyFrame::Ptr &kf){
         std::unique_lock<std::mutex> lock(mMutexNewKFs);
         mlpNewkeyFrames.push_back(kf);
-        mbNeedOptimize = true;
     }
 
     bool CheckNewKeyFrame(){

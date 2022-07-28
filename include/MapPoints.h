@@ -30,12 +30,12 @@ namespace myslam{
         Vector3d GetPose(){
             return mCoordinate;
         }
-
+/*
         std::map<unsigned long, std::weak_ptr<Feature> > GetActivateObservation(){
             std::unique_lock<std::mutex> lock(mObservationMutex);
             return mActiveObservation;
         }
-
+*/
         std::map<unsigned long, std::weak_ptr<Feature> > GetObservation(){
             std::unique_lock<std::mutex> lock(mObservationMutex);
             return mObservation;
@@ -46,13 +46,14 @@ namespace myslam{
             mObservation.insert({id, feat});
             mObservedCnt++;
         }
-        
+/*        
         void AddActivateObservation(unsigned long id, const std::shared_ptr<Feature>& feat){
             std::unique_lock<std::mutex> lock(mObservationMutex);
             mActiveObservation.insert({id, feat});
             mActiveObesedrCnt++;
         }
-
+*/
+/*
         void RemoveActiveObservation(const std::shared_ptr<Feature>& feat){
             std::unique_lock<std::mutex> lock(mObservationMutex);
             for(auto iter = mActiveObservation.begin();iter!=mActiveObservation.end();iter++){
@@ -63,23 +64,23 @@ namespace myslam{
                 }
             }
         }
-
+*/
         void RemoveObservation(std::shared_ptr<Feature> &feature){
             std::unique_lock<std::mutex> lock(mObservationMutex);
             for(auto iter = mObservation.begin(); iter != mObservation.end(); iter++){
                 if(iter->second.lock() == feature){
                     mObservation.erase(iter);
                     mObservedCnt--;
-                    break;
+                    return;
                 }
             }
         }
-
+/*
         unsigned long GetActivateObsCnt() {
             std::unique_lock<std::mutex> lck(mObservationMutex);
             return mActiveObesedrCnt;
         }
-
+*/
         unsigned long GetObsCnt() {
             std::unique_lock<std::mutex> lock(mObservationMutex);
             return mObservedCnt;
@@ -97,10 +98,10 @@ namespace myslam{
         Vector3d mCoordinate = Vector3d::Zero();
         // 第一个为关键帧ID, 第二个为特征点
         std::map<unsigned long, std::weak_ptr<Feature> > mObservation;
-        std::map<unsigned long, std::weak_ptr<Feature> > mActiveObservation;
+        //std::map<unsigned long, std::weak_ptr<Feature> > mActiveObservation;
 
         unsigned long mObservedCnt = 0;
-        unsigned long mActiveObesedrCnt = 0;
+        //unsigned long mActiveObesedrCnt = 0;
 
         std::mutex mObservationMutex;
     };

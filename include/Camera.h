@@ -40,9 +40,9 @@ public:
      * @details 参数T_cw的初始值为单位SE3 = [R|t] = [I | 0]
      * */
     cv::Point2f World2Pixel(const Vector3d &p_world, const SE3 &T_cw = SE3_Identity){
-        Vector3d p_cam = T_cw * p_world;
+        Vector3d p_cam = mPose * T_cw * p_world;
+        //LOG(INFO) << "mpose: " << mPose.matrix3x4();
         //LOG(INFO) << "T_CW: \n" << T_cw.matrix() << "\n" << "p_w: \n" << p_world.matrix();
-        //LOG(INFO) << "p_cam: \n" << p_cam;
         return Camera2Pixel(p_cam);
     }
 
