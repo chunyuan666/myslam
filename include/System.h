@@ -27,7 +27,10 @@ public:
     explicit System(const std::string& config_file);
 
     void Stop(){
-        mBackend->Stop();
+        if(mBackend)
+            mBackend->Stop();
+        if(mViewer)
+            mViewer->Close();
     }
 
     /**
@@ -52,6 +55,8 @@ public:
      * @param[cv::Mat] ImgLeft　左目图片
     */
     bool Run(const cv::Mat &ImgLeft, const cv::Mat &ImgRight, const double &TimeStamp);
+
+    void SetViewerPara();
 
     /**
      * @brief 析构函数

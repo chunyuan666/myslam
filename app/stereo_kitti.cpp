@@ -1,6 +1,7 @@
 #include "System.h"
 #include <iostream>
 #include "Common.h"
+#include <chrono>
 
 using namespace std;
 using namespace myslam;
@@ -43,16 +44,25 @@ int main(int argc, char **argv){
                  << string(vstrImageLeft[ni]) << std::endl;
             return 1;
         }
-
+        auto t1 = std::chrono::steady_clock::now();
         //　开始运行
         bool isGood = slam->Run(ImgLeft, ImgRight, TimeStamp);
+        auto t2 = std::chrono::steady_clock::now();
+        double time_track = std::chrono::duration_cast <std::chrono::duration<double>> (t2 - t1).count();
+        double T = 0.0;
+        T = vTimestamps[ni+1]-TimeStamp;
+        if(time_track < T){
+            usleep((T-time_track)*1e6);
+        }
+        
         if(!isGood)
             break; 
    }
 
     slam->Stop();
     
-
+    std::cout << std::endl << "-------" << std::endl;
+    std::cout << "system stop." << std::endl;
 
     return 0;
 

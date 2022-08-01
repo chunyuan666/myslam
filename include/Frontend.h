@@ -12,6 +12,7 @@
 #include "Map.h"
 #include "KeyFrame.h"
 #include "Optimizer.h"
+#include "Viewer.h"
 
 namespace myslam{
 
@@ -162,6 +163,10 @@ public:
         }
     }
 
+    void SetViewer(const Viewer::Ptr &v){
+        mViewer = v;
+    }
+
 public:
     typedef std::shared_ptr<Frontend> Ptr;
     Backend::Ptr mBackend;
@@ -170,6 +175,7 @@ public:
     ORBExtractor::Ptr mORBExtractor, mORBExtractorInit;
     Camera::Ptr mCameraLeft, mCameraRight;
     Map::Ptr mMap;
+    Viewer::Ptr mViewer;
     
 
 private:

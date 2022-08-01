@@ -25,6 +25,8 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/eigen.hpp>
 
+#include <pangolin/pangolin.h>
+
 #include <g2o/types/slam3d/types_slam3d.h>
 
 

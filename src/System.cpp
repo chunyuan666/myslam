@@ -43,7 +43,15 @@ System::System(const std::string& config_file){
     mBackend->SetCamera(mCameraLeft);
     
     mFrontend->SetBackend(mBackend);
-    
+
+    bool bshow;
+    fs_read["Viewer.bShow"] >> bshow;
+    if(bshow){
+         SetViewerPara();
+         mViewer->SetMap(mMap);
+    }
+           
+    mFrontend->SetViewer(mViewer);
     
 
 }
@@ -96,6 +104,23 @@ void System::GetORBExtractorPara(){
                     scaleFactor, nLevels, iniThFAST, minThFAST );
     mORBExtractorInit = std::make_shared<ORBExtractor>(nInitFeatures,
                     scaleFactor, nLevels, iniThFAST, minThFAST );
+}
+
+void System::SetViewerPara(){
+    float ViewpointX, ViewpointY, ViewpointZ, ViewpointF;
+    float GraphLineWidth, PointSize, CameraSize, CameraLineWidth, KeyFrameSize,KeyFrameLineWidth;
+    fs_read["Viewer.ViewpointX"] >> ViewpointX;
+    fs_read["Viewer.ViewpointY"] >> ViewpointY;
+    fs_read["Viewer.ViewpointZ"] >> ViewpointZ;
+    fs_read["Viewer.ViewpointF"] >> ViewpointF;
+    fs_read["Viewer.KeyFrameSize"] >> KeyFrameSize;
+    fs_read["Viewer.KeyFrameLineWidth"] >> KeyFrameLineWidth;
+    fs_read["Viewer.GraphLineWidth"] >> GraphLineWidth;
+    fs_read["Viewer.PointSize"] >> PointSize;
+    fs_read["Viewer.CameraSize"] >> CameraSize;
+    fs_read["Viewer.CameraLineWidth"] >> CameraLineWidth;
+    mViewer = std::make_shared<Viewer>(ViewpointX,ViewpointY,ViewpointZ,ViewpointF,GraphLineWidth,
+                        PointSize, CameraSize, CameraLineWidth,  KeyFrameSize, KeyFrameLineWidth);
 }
 
 /**

@@ -3,7 +3,7 @@ project(myslam)
 
 set(CMAKE_BUILD_TYPE Debug)
 # set(CMAKE_BUILD_TYPE Release)
-set(CMAKE_CXX_FLAGS "-std=c++14 -Wall -g")
+set(CMAKE_CXX_FLAGS "-std=c++14 -Wall -O3 -g")
 set(CMAKE_CXX_FLAGS_DEBUG "-std=c++14  -O3 -fopenmp -pthread")
 # set(CMAKE_CXX_FLAGS_Release "-std=c++14 -O3 -fopenmp -pthread")
 
@@ -49,6 +49,10 @@ include_directories(${G2O_INCLUDE_DIRS})
 find_package(CSparse REQUIRED)
 include_directories(${CSPARSE_INCLUDE_DIR})
 
+# pangolin
+find_package(Pangolin REQUIRED)
+include_directories(${Pangolin_INCLUDE_DIRS})
+
 
 
 # 设置第三方库
@@ -62,6 +66,7 @@ set(THIRD_PARTY_LIBS
         g2o_core g2o_stuff g2o_types_sba g2o_solver_csparse g2o_csparse_extension
         ${CSPARSE_LIBRARY}
         pthread
+        ${Pangolin_LIBRARIES} GL GLU GLEW glut
         )
 
 ## 设置源文件路径、头文件路径
@@ -79,7 +84,8 @@ add_library(${PROJECT_NAME} STATIC
         src/Map.cpp
         src/KeyFrame.cpp
         src/Optimizer.cpp include/Optimizer.h
-        src/Backend.cpp)
+        src/Backend.cpp
+        src/Viewer.cpp)
 
 enable_testing()
 

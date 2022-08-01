@@ -47,6 +47,10 @@ public:
         return mmActivateMapPoints;
     }
 
+    std::map<unsigned long, MapPoints::Ptr> GetAllMapPoints(){
+        return mmAllMapPoints;
+    }
+
     void CullOldActivateKF();
 
     void CullOldActivateMapPoint();
@@ -56,6 +60,8 @@ public:
     void RemoveOutlierMapPoints();
     
     void CullOldActivateKF2();
+
+    
 
 
 public:

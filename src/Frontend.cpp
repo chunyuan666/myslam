@@ -24,7 +24,10 @@ namespace myslam {
                 return false;
                 break;
         }
-
+        
+        if(mViewer)
+            mViewer->AddCurrentFrame(mCurrentFrame);
+        
         mLastFrame = mCurrentFrame;
         return true;
     }
@@ -72,9 +75,6 @@ namespace myslam {
         cv::drawKeypoints(mCurrentFrame->mImgLeft, KeyPoints, outimg,
                           cv::Scalar::all(-1), cv::DrawMatchesFlags::DEFAULT);
         LOG(INFO) << "sum OBR: " << KeyPoints.size();
-        cv::imshow("ORB", outimg);
-        cv::waitKey(5);
-        cv::destroyAllWindows();
         unsigned long cnt = 0;
         for (auto &KeyPoint: KeyPoints) {
             Feature::Ptr feature = std::make_shared<Feature>(KeyPoint);
@@ -191,7 +191,7 @@ namespace myslam {
             mMap->InserMapPoint(NewPoint);
         }
 
-        // LOG(INFO) << "新增" << nGoodPoints << "个" << "地图点";
+        LOG(INFO) << "新增" << nGoodPoints << "个" << "地图点";
         return nGoodPoints;
     }
 
@@ -244,6 +244,7 @@ namespace myslam {
                 nGoodPoints++;
             }
         }
+        LOG(INFO) << "追踪到上一帧一共 "<<nGoodPoints<<" 个地图点";
         return nGoodPoints;
     }
 

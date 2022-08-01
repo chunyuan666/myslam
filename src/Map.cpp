@@ -49,7 +49,7 @@ namespace myslam{
 
         // 如果活跃帧大于阈值7．则删除一些活跃帧
         if(mmActivateKeyFrames.size() > mNumActivateMap){
-            CullOldActivateKF2();
+            CullOldActivateKF();
             CullOldActivateMapPoint();
         }
     }

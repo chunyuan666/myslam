@@ -25,7 +25,7 @@ namespace myslam{
         //features.reserve(Frame->mvpFeatureLeft.size());
         for(auto &fea : Frame->mvpFeatureLeft){
             auto map = fea->mpMapPoint.lock();
-            if(map && !map->mbIsOutlier){
+            if(map){
                 auto *edge = new EdgeProjectionPoseOnly(map->GetPose(), Frame->mK);
                 edge->setId(index);
                 edge->setVertex(0, vertex);
@@ -43,6 +43,7 @@ namespace myslam{
         int nOutLiers = 0;
         int iterations = 4;
         for(int iter = 0; iter < iterations; iter++){
+            vertex->setEstimate(Frame->GetPose());
             optimizer.initializeOptimization(0);
             optimizer.optimize(10);
             nOutLiers = 0;
@@ -107,29 +108,29 @@ namespace myslam{
         }
 
         int index = 1;
-        double chi2_th = 7.851;
+        double chi2_th = 5.991;
         std::map<Feature::Ptr, EdgeProjection *> FeatsAndEdges;
         // 增加顶点，地图点的坐标
         for(auto &MapPoint : MPs){
             auto mp_id = MapPoint.first;
             auto mp = MapPoint.second;
-            if(mp==nullptr || mp->mbIsOutlier)
+            if(mp==nullptr)
                 continue;
-            auto vertex_XYZ = new VertexXYZ();
-            vertex_XYZ->setId(static_cast<int>(maxKFid +1 + mp->mid));
-            //LOG(INFO) << "\nmp_pose: \n" << mp->GetPose().matrix();
-            vertex_XYZ->setEstimate(mp->GetPose());
-            vertex_XYZ->setMarginalized(true);
-
-            optimizer.addVertex(vertex_XYZ);
-            Vertex_Mps.insert(std::make_pair(mp->mid, vertex_XYZ));
+            if(Vertex_Mps.find(mp->mid) == Vertex_Mps.end()){
+                auto vertex_XYZ = new VertexXYZ();
+                vertex_XYZ->setId(static_cast<int>(maxKFid +1 + mp->mid));
+                //LOG(INFO) << "\nmp_pose: \n" << mp->GetPose().matrix();
+                vertex_XYZ->setEstimate(mp->GetPose());
+                vertex_XYZ->setMarginalized(true);
+                optimizer.addVertex(vertex_XYZ);
+                Vertex_Mps.insert(std::make_pair(mp->mid, vertex_XYZ));
+            }
             auto observations = mp->GetObservation();
             for(auto &obs : observations){
                 auto kfId = obs.first;
                 auto feat = obs.second.lock();
-                if(feat==nullptr || feat->IsOutLier)
+                if(feat==nullptr)
                     continue;
-                //assert(KFs.find(kfId) != KFs.end());
                 if(KFs.find(kfId) == KFs.end()) {
                     LOG(INFO) << "第 "<<kfId<<"帧不在actiKFs里"; 
                 }
@@ -140,28 +141,13 @@ namespace myslam{
                 e->setMeasurement(cvPoint2Vec2(feat->mKeyPoint.pt));
                 e->setInformation(Mat22d::Identity());
                 auto rk = new g2o::RobustKernelHuber();
-                rk->setDelta(sqrt(chi2_th));
+                rk->setDelta(chi2_th);
                 e->setRobustKernel(rk);
                 optimizer.addEdge(e);
                 index++;
                 FeatsAndEdges.insert(std::make_pair(feat, e));
             }
         }
-
-/*        for(auto &MapPoint : MPs){
-            auto mp_id = MapPoint.first;
-            auto mp = MapPoint.second;
-            if(mp==nullptr || mp->mbIsOutlier) continue;
-            
-            auto observations = mp->GetObservation();
-            for(auto &obs : observations){
-                auto kfId = obs.first;
-                auto feat = obs.second.lock();
-                if(feat==nullptr) continue;
-
-            }
-        }
-*/
         int cntOutlier = 0, cntInlier = 0;
 
         optimizer.initializeOptimization(0);
@@ -179,7 +165,7 @@ namespace myslam{
         }
 
         optimizer.initializeOptimization(0);
-        optimizer.optimize(5);
+        optimizer.optimize(10);
 
         for(auto &fe : FeatsAndEdges){
             auto feat = fe.first;
@@ -194,8 +180,8 @@ namespace myslam{
             }
         }
                 
-        //LOG(INFO) << "OUTLIERS nums is:  " << cntOutlier;
-       // LOG(INFO) << "INLIERS nums is:  " << cntInlier;
+        LOG(INFO) << "OUTLIERS nums is:  " << cntOutlier;
+        LOG(INFO) << "INLIERS nums is:  " << cntInlier;
         // 处理外点
         // 遍历当前边和特征点
         for(auto &fe : FeatsAndEdges){
@@ -207,14 +193,16 @@ namespace myslam{
                 //mp->RemoveActiveObservation(feat);
                 mp->RemoveObservation(feat);
                 // 释放该地图点的指针,feat不再持有该地图点的指针
-                feat->mpMapPoint.reset();
+                //feat->mpMapPoint.reset();
                 /*
                 if(mp->GetObsCnt()==0){ //该点已经没有观测
                     mp->mbIsOutlier = true; //标记为外点
                 }
                 */
+               feat->IsOutLier=false;
             }
         }
+        
         //设置当前帧的位姿
         for(auto &v : Vertex_KFs){
             KFs[v.first]->SetPose(v.second->estimate());
